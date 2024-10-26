@@ -9,15 +9,28 @@ sparql = SPARQLWrapper('https://dbpedia.org/sparql')
 
 # TODO clean numEmployees, remove symbols and words >, +, Approx, Approximately, globally. force to integer
 query = '''
-    select ?company ?name ?numEmployees
-    where {
+    select DISTINCT ?company ?name ?numEmployees
+    where { {
         ?company rdf:type schema:Organization ;
         dbp:industry ?industry ;
+        dbp:numEmployees ?numEmployees ;
         dbo:locationCity ?city ;
+        dcterms:subject ?subject ;
+        foaf:name ?name .
+    } Union {
+        ?company rdf:type schema:Organization ;
+        dbo:industry ?industry ;
+        dbo:location ?location ;
+        dcterms:subject ?subject ;
         dbp:numEmployees ?numEmployees ;
         foaf:name ?name .
-        FILTER(CONTAINS(lcase(str(?industry)), "computer") || CONTAINS(lcase(str(?industry)), "development"))
-        FILTER(CONTAINS(lcase(str(?city)), "ukraine"))
+    }
+        FILTER(
+            CONTAINS(lcase(str(?industry)), "computer") ||
+            CONTAINS(lcase(str(?industry)), "development") ||
+            CONTAINS(lcase(str(?industry)), "software")
+        )
+        FILTER(CONTAINS(lcase(str(?city)), "ukraine") || CONTAINS(lcase(str(?subject)), "ukraine"))
     } order by DESC (?numEmployees)
 '''
 
